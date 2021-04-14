@@ -1,6 +1,6 @@
-require 'model'
-require 'csv_formatter'
-require 'csv_reader'
+require_relative 'lib/model'
+require_relative 'lib/csv_formatter'
+require_relative 'lib/csv_reader'
 
 def main
   csv_path = ARGV[0]
