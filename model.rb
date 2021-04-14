@@ -17,7 +17,8 @@ class CellModel
     raise NotImplementedError, "#{self.class.name}##{__method__} is an abstract method."
   end
 
-  def accept(visitor)
+  # For visitor
+  def format(formatter)
     raise NotImplementedError, "#{self.class.name}##{__method__} is an abstract method."
   end
 
@@ -35,8 +36,8 @@ class IntCellModel < CellModel
     @value = raw_str.to_i
   end
 
-  def accept(visitor)
-    visitor.forInt(self)
+  def format(formatter)
+    formatter.createInt(self)
   end
 end
 
@@ -49,8 +50,8 @@ class StringCellModel < CellModel
     @value = raw_str
   end
 
-  def accept(visitor)
-    visitor.forString(self)
+  def format(formatter)
+    formatter.createString(self)
   end
 end
 
@@ -64,8 +65,8 @@ class MoneyCellModel < CellModel
     @value = dollars * 100 + cents
   end
 
-  def accept(visitor)
-    visitor.forMoney(self)
+  def format(formatter)
+    formatter.createMoney(self)
   end
 end
 

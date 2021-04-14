@@ -93,7 +93,7 @@ describe CSVReader do
   end
 end
 
-describe CSVFormatter do
+describe ASCIIFormatter do
   include_context "common models"
 
   context ".format" do

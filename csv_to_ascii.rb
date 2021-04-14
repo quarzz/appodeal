@@ -17,7 +17,7 @@ def main
     exit(1)
   end
 
-  csv_formatter = CSVFormatter.new(table_model)
+  csv_formatter = ASCIIFormatter.new(table_model)
   puts csv_formatter.format
 end
 

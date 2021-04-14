@@ -1,3 +1,5 @@
+require_relative 'model'
+
 class CellASCII
   def initialize(cell_model)
     @model = cell_model
@@ -11,12 +13,14 @@ class CellASCII
     lines.size
   end
 
-  def line(i, width)
-    (lines[i] || "").rjust(width)
-  end
-
+  # Returns lines of cell's formatted form (but without justification)
   def lines
     raise NotImplementedError, "#{self.class.name}##{__method__} is an abstract method."
+  end
+
+  # Returns one formatted line from lines with correct justification applied
+  def line(i, width)
+    (lines[i] || "").rjust(width)
   end
 end
 
@@ -43,16 +47,17 @@ class MoneyCellASCII < CellASCII
   end
 end
 
-class ASCIIVisitor
-  def forInt(cell)
+# Visitor
+class ASCIICellFormatter
+  def createInt(cell)
     IntCellASCII.new(cell)
   end
 
-  def forString(cell)
+  def createString(cell)
     StringCellASCII.new(cell)
   end
 
-  def forMoney(cell)
+  def createMoney(cell)
     MoneyCellASCII.new(cell)
   end
 end
@@ -63,62 +68,54 @@ class ASCIIFormatter
     ++
   TABLE
 
-  def initialize(table)
-    @table = table
+  def initialize(table_model)
+    @table_model = table_model
   end
 
   def format
-    return EMPTY_TABLE if @table.empty?
+    return EMPTY_TABLE if @table_model.empty?
 
-    visitor = ASCIIVisitor.new
-    @csv_cells = @table.cells.map { |row| row.map { |cell| cell.accept(visitor)} }
+    create_ascii_cells
+    calculate_dimensions
+    generate_formatted_string
+  end
 
-    # require 'pry'; binding.pry
-    column_count = @table.cells.first.size
-    row_count = @table.cells.size
+  private 
+
+  def create_ascii_cells
+    formatter = ASCIICellFormatter.new
+    @ascii_cells = @table_model.cells.map { |row| row.map { |cell| cell.format(formatter)} }
+  end
+
+  def calculate_dimensions
+    column_count = @table_model.cells.first.size
     @column_widths = Array.new(column_count, 0)
-    @row_heights = Array.new(row_count, 0)
-    @csv_cells.each.with_index do |row, i|
+    @ascii_cells.each.with_index do |row|
       row.each.with_index do |cell, j|
         @column_widths[j] = [@column_widths[j], cell.width].max
-        @row_heights[i] = [@row_heights[i], cell.height].max
       end
     end
     @table_width = @column_widths.sum + @column_widths.size + 1
-
-    @result = formatted_begin + "\n"
-    @result += @csv_cells.size.times.map { |i| formatted_row(i) }.join("\n#{formatted_between}\n")
-    @result += "\n" + formatted_between + "\n"
-    @result
   end
 
-  def format
-    return EMPTY_TABLE if @table.empty?
-
-    create_formatted_cells
-    calculate_dimensions
+  def generate_formatted_string
+    @result = header_rule
+    @result << @ascii_cells.map { |row| format_row(row) }.join("#{line_rule}")
+    @result << line_rule
   end
 
-  def create_formatted_cells
-    visitor = ASCIIVisitor.new
-    @csv_cells = @table.cells.map { |row| row.map { |cell| cell.accept(visitor)} }
+  def header_rule
+    "+#{'-' * (@table_width - 2)}+\n"
   end
 
-  def formatted_begin
-    # require 'pry'; binding.pry
-    "+#{'-' * (@table_width - 2)}+"
+  def line_rule
+    @line_rule ||= "\n+#{@column_widths.map { |w| '-' * w }.join('+')}+\n"
   end
 
-  def formatted_row(row_index)
-    @row_heights[row_index].times.map do |i|
-      row = @csv_cells[row_index].map.with_index do |cell, j|
-        cell.line(i, @column_widths[j])
-      end.join('|')
-      "|#{row}|"
+  def format_row(row)
+    height = row.map(&:height).max
+    (0...height).map do |i|
+      "|#{row.map.with_index { |cell, j| cell.line(i, @column_widths[j]) }.join('|')}|"
     end.join("\n")
-  end
-
-  def formatted_between
-    "+#{@column_widths.map { |w| '-' * w }.join('+')}+"
   end
 end
