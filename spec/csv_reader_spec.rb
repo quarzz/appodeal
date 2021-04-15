@@ -6,8 +6,8 @@ shared_context "common models" do
   let(:normal_model) do
     TableModel.new([
       [IntCellModel.new("123"), StringCellModel.new("a00000bc def hhhhhhhhhhh"), MoneyCellModel.new("1000.33")],
-      [IntCellModel.new("9"), StringCellModel.new("xxxxxxxxxxxxxxxxx"), MoneyCellModel.new("999999.00")],
-      [IntCellModel.new("0"), StringCellModel.new(""), MoneyCellModel.new("1.03")],
+      [IntCellModel.new("-9"), StringCellModel.new("xxxxxxxxxxxxxxxxx"), MoneyCellModel.new("999999.00")],
+      [IntCellModel.new("0"), StringCellModel.new(""), MoneyCellModel.new("-1.03")],
     ])
   end
   let(:empty_model) { TableModel.new([]) }
@@ -19,9 +19,9 @@ shared_context "common models" do
     |   |def              |          |
     |   |hhhhhhhhhhh      |          |
     +---+-----------------+----------+
-    |  9|xxxxxxxxxxxxxxxxx|999 999.00|
+    | -9|xxxxxxxxxxxxxxxxx|999 999.00|
     +---+-----------------+----------+
-    |  0|                 |      1.03|
+    |  0|                 |     -1.03|
     +---+-----------------+----------+
   OUTPUT
   let(:empty_output) { <<~OUTPUT }

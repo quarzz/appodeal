@@ -1,5 +1,9 @@
+# frozen_string_literal: true
+
 require_relative 'model'
 
+# Represents one cell in ASCII table.
+# This cell knows its format (by type), dimensions and how to justify itself
 class CellASCII
   def initialize(cell_model)
     @model = cell_model
@@ -42,8 +46,9 @@ end
 
 class MoneyCellASCII < CellASCII
   def lines
-    dollars, cents = @model.value.divmod(100)
-    @lines ||= ["#{dollars.to_s.reverse.scan(/.{1,3}/).join(' ').reverse}.#{cents.to_s.rjust(2, '0')}"]
+    dollars, cents = @model.value.abs.divmod(100)
+    sign = @model.value.negative? ? '-' : ''
+    @lines ||= ["#{sign}#{dollars.to_s.reverse.scan(/.{1,3}/).join(' ').reverse}.#{cents.to_s.rjust(2, '0')}"]
   end
 end
 
@@ -62,6 +67,7 @@ class ASCIICellFormatter
   end
 end
 
+# Creates ASCII table for table model
 class ASCIIFormatter
   EMPTY_TABLE = <<~TABLE
     ++
@@ -90,7 +96,7 @@ class ASCIIFormatter
   def calculate_dimensions
     column_count = @table_model.cells.first.size
     @column_widths = Array.new(column_count, 0)
-    @ascii_cells.each.with_index do |row|
+    @ascii_cells.each do |row|
       row.each.with_index do |cell, j|
         @column_widths[j] = [@column_widths[j], cell.width].max
       end
@@ -99,9 +105,13 @@ class ASCIIFormatter
   end
 
   def generate_formatted_string
-    @result = header_rule
-    @result << @ascii_cells.map { |row| format_row(row) }.join("#{line_rule}")
-    @result << line_rule
+    @output = String.new
+    @output << header_rule
+    @ascii_cells.each do |row|
+      write_row(row)
+      @output << line_rule
+    end
+    @output
   end
 
   def header_rule
@@ -109,13 +119,22 @@ class ASCIIFormatter
   end
 
   def line_rule
-    @line_rule ||= "\n+#{@column_widths.map { |w| '-' * w }.join('+')}+\n"
+    "\n+#{@column_widths.map { |w| '-' * w }.join('+')}+\n"
   end
 
-  def format_row(row)
+  def write_row(row)
     height = row.map(&:height).max
-    (0...height).map do |i|
-      "|#{row.map.with_index { |cell, j| cell.line(i, @column_widths[j]) }.join('|')}|"
-    end.join("\n")
+    (height - 1).times do |i|
+      write_line(row, i)
+      @output << "\n"
+    end
+    write_line(row, height - 1)
+  end
+
+  def write_line(row, line_index)
+    @output << '|'
+    row.each.with_index do |cell, j|
+      @output << cell.line(line_index, @column_widths[j]) << '|'
+    end
   end
 end

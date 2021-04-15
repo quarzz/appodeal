@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class MalformedRawModelData < StandardError; end
 
 class CellModel
@@ -29,7 +31,7 @@ end
 
 class IntCellModel < CellModel
   def valid?(raw_str)
-    raw_str.match?(/\d+/)
+    raw_str.match?(/^-?\d+$/)
   end
 
   def value=(raw_str)
@@ -57,12 +59,13 @@ end
 
 class MoneyCellModel < CellModel
   def valid?(raw_str)
-    raw_str.match?(/\d+\.\d{2}/)
+    raw_str.match?(/^-?\d+\.\d{2}$/)
   end
 
   def value=(raw_str)
-    dollars, cents = raw_str.split('.').map(&:to_i)
+    dollars, cents = raw_str.scan(/\d+/).map(&:to_i)
     @value = dollars * 100 + cents
+    @value = -@value if raw_str.start_with?('-')
   end
 
   def format(formatter)

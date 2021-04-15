@@ -1,7 +1,10 @@
+# frozen_string_literal: true
+
 require 'csv'
 
 class MalformedCSVError < StandardError; end
 
+# Creates table model from CSV file
 class CSVReader
   def read(path)
     CSV.open(path, col_sep: ';') do |csv|
