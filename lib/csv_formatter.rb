@@ -101,7 +101,7 @@ class ASCIIFormatter
         @column_widths[j] = [@column_widths[j], cell.width].max
       end
     end
-    @table_width = @column_widths.sum + @column_widths.size + 1
+    @table_width = @column_widths.sum + column_count + 1
   end
 
   def generate_formatted_string
